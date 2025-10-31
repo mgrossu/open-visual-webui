@@ -25,7 +25,6 @@ RUN zypper refresh && \
 
 # Upgrade pip and install Python packages
 COPY requirements.txt /app/
-RUN python3.11 -m pip install --upgrade pip setuptools wheel
 RUN python3.11 -m pip install --no-cache-dir -r requirements.txt
 
 # Copy app code
