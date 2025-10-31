@@ -1,35 +1,30 @@
-# Base image
-FROM opensuse/tumbleweed:latest
+# Use the latest official Python 3.13 slim image
+FROM python:3.13-slim
 
 # Prevent Python from writing .pyc files and buffer output
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
+# Set working directory
 WORKDIR /app
 
-# Install Python 3.11, build tools, and OpenCV dependencies
-RUN zypper refresh && \
-    zypper install -y --no-recommends \
-        python311 \
-        python311-pip \
-        python311-devel \
-        gcc \
-        gcc-c++ \
-        make \
-        cmake \
-        git \
-        wget \
-        Mesa-libGL1 \
-        libglib-2_0-0 \
-    && zypper clean -a
-
-# Upgrade pip and install Python packages
+# Copy requirements first for caching
 COPY requirements.txt /app/
-RUN python3.11 -m pip install --no-cache-dir -r requirements.txt
 
-# Copy app code
+# Install system dependencies for OpenCV
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libgl1 libglib2.0-0 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Upgrade pip and install Python dependencies
+RUN pip install --upgrade pip setuptools wheel && \
+    pip install --no-cache-dir -r requirements.txt
+
+# Copy the rest of the app
 COPY . /app/
 
+# Expose the port Flask runs on
 EXPOSE 8008
 
-CMD ["python3.11", "app.py"]
+# Run the app
+CMD ["python", "app.py"]
