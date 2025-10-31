@@ -11,14 +11,22 @@ WORKDIR /app
 # Copy requirements first for caching
 COPY requirements.txt /app/
 
-# Install system dependencies for OpenCV
+# Install system dependencies needed for OpenCV and building some Python packages
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libgl1 libglib2.0-0 && \
-    rm -rf /var/lib/apt/lists/*
+    build-essential \
+    python3-dev \
+    libgl1 \
+    libglib2.0-0 \
+    cmake \
+    git \
+    wget \
+    && rm -rf /var/lib/apt/lists/*
 
-# Upgrade pip and install Python dependencies
-RUN pip install --upgrade pip && \
-    pip install -r requirements.txt
+# Upgrade pip, setuptools, and wheel to avoid build issues
+RUN pip install --upgrade pip setuptools wheel
+
+# Install Python dependencies
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the rest of the app
 COPY . /app/
